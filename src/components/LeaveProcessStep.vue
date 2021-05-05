@@ -1,0 +1,49 @@
+<template>
+  <v-stepper v-model="current">
+    <v-stepper-header>
+      <template v-for="(process, index) in leaveProcesses">
+        <v-stepper-step
+          :key="`${index}-step`"
+          :complete="current > index"
+          :step="index + 1"
+          editable
+        >
+          {{ process.title }}{{ index === 0 ? '' : '簽名' }}
+        </v-stepper-step>
+
+        <v-divider
+          v-if="index + 1 !== leaveProcesses.length"
+          :key="index"
+        ></v-divider>
+      </template>
+    </v-stepper-header>
+  </v-stepper>
+</template>
+<script>
+export default {
+  data() {
+    return {
+      current: 0,
+      leaveProcesses: [
+        {
+          title: '病假',
+          check: true,
+        },
+        {
+          title: '代理人',
+          check: true,
+        },
+        {
+          title: '單位主管',
+          check: true,
+        },
+
+        {
+          title: '總經理',
+          check: true,
+        },
+      ],
+    };
+  },
+};
+</script>

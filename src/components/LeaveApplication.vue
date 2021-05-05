@@ -29,20 +29,24 @@
         送出表單
       </v-btn>
     </v-form>
-    <div>{{ dgraphData }}</div>
+    <div v-if="leaveProcessResults" class="mt-4 pa-4">
+      <leave-process-step></leave-process-step>
+    </div>
   </v-container>
 </template>
 <script>
 import DatePickerDialog from './DatePickerDialog';
+import LeaveProcessStep from './LeaveProcessStep';
 import { getDgraphClient, queryData } from '../utils/dgraph-client';
 
 export default {
   components: {
     'date-picker-dialog': DatePickerDialog,
+    'leave-process-step': LeaveProcessStep,
   },
   data: () => ({
     username: '',
-    dgraphData: null,
+    leaveProcessResults: null,
     selectLeaveType: null,
     selectLeaveDayRange: [],
     leaveTypes: ['病假', '事假', '婚假'],
@@ -77,7 +81,7 @@ export default {
       const dgraphClient = getDgraphClient();
       const input = this.getLeaveApplicationData();
 
-      this.dgraphData = await queryData(dgraphClient, input);
+      this.leaveProcessResults = await queryData(dgraphClient, input);
     },
   },
 };
