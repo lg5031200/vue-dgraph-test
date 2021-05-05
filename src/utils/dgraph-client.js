@@ -1,8 +1,8 @@
-const dgraph = require("dgraph-js-http");
+const dgraph = require('dgraph-js-http');
 
 // Create a client stub.
 function newClientStub() {
-  return new dgraph.DgraphClientStub("http://localhost:8080");
+  return new dgraph.DgraphClientStub('http://localhost:8080');
 }
 
 // Create a client.
@@ -18,13 +18,14 @@ async function dropAll(dgraphClient) {
 // Set schema.
 async function setSchema(dgraphClient) {
   const schema = `
-        name: string @index(exact) .
-        age: int .
-        married: bool .
-        loc: geo .
-        dob: datetime .
-    `;
+    process_name: string @index(hash) .
+    processEdges: [uid] .
+    check: string .
+    next: uid .
+    process_edge_name: string .
+  `;
   await dgraphClient.alter({ schema: schema });
+  console.log('Set schema success!');
 }
 
 // Create data using JSON.
@@ -33,31 +34,137 @@ async function createData(dgraphClient) {
   const txn = dgraphClient.newTxn();
   try {
     // Create data.
-    const p = {
-      name: "Alice",
-      age: 26,
-      married: true,
-      loc: {
-        type: "Point",
-        coordinates: [1.1, 2],
+    const p = [
+      {
+        'dgraph.type': 'Process',
+        uid: '_:sickLeave',
+        process_name: '病假',
+        processEdges: [
+          {
+            'dgraph.type': 'ProcessEdge',
+            uid: '_:rootToFirst',
+            process_edge_name: 'whatever',
+            check: 'whatever',
+            next: {
+              'dgraph.type': 'Process',
+              uid: '_:agentSign',
+              process_name: '職務代理人簽核',
+              processEdges: [
+                {
+                  'dgraph.type': 'ProcessEdge',
+                  uid: '_:firstToSecond',
+                  process_edge_name: 'whatever',
+                  check: 'whatever',
+                  next: {
+                    'dgraph.type': 'Process',
+                    uid: '_:departmentHeadSign',
+                    process_name: '部門主管簽核',
+                    processEdges: [
+                      {
+                        'dgraph.type': 'ProcessEdge',
+                        process_edge_name: 'over_than_3_days',
+                        check: "${leaveDays} > 3 && ${leaveType} == '病假'",
+                        next: {
+                          'dgraph.type': 'Process',
+                          uid: '_:generalManagerSign',
+                          process_name: '總經理簽核',
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
       },
-      dob: new Date(1980, 1, 1, 23, 0, 0, 0),
-      friend: [
-        {
-          name: "Bob",
-          age: 24,
-        },
-        {
-          name: "Charlie",
-          age: 29,
-        },
-      ],
-      school: [
-        {
-          name: "Crown Public School",
-        },
-      ],
-    };
+      {
+        'dgraph.type': 'Process',
+        uid: '_:personalLeave',
+        process_name: '事假',
+        processEdges: [
+          {
+            'dgraph.type': 'ProcessEdge',
+            uid: '_:rootToFirst',
+            process_edge_name: 'whatever',
+            check: 'whatever',
+            next: {
+              'dgraph.type': 'Process',
+              uid: '_:agentSign',
+              process_name: '職務代理人簽核',
+              processEdges: [
+                {
+                  'dgraph.type': 'ProcessEdge',
+                  uid: '_:firstToSecond',
+                  process_edge_name: 'whatever',
+                  check: 'whatever',
+                  next: {
+                    'dgraph.type': 'Process',
+                    uid: '_:departmentHeadSign',
+                    process_name: '部門主管簽核',
+                    processEdges: [
+                      {
+                        'dgraph.type': 'ProcessEdge',
+                        process_edge_name: 'over_than_3_days',
+                        check: "${leaveDays} > 3 && ${leaveType} == '事假'",
+                        next: {
+                          'dgraph.type': 'Process',
+                          uid: '_:generalManagerSign',
+                          process_name: '總經理簽核',
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+      {
+        'dgraph.type': 'Process',
+        uid: '_:weddingLeave',
+        process_name: '婚假',
+        processEdges: [
+          {
+            'dgraph.type': 'ProcessEdge',
+            uid: '_:rootToFirst',
+            process_edge_name: 'whatever',
+            check: 'whatever',
+            next: {
+              'dgraph.type': 'Process',
+              uid: '_:agentSign',
+              process_name: '職務代理人簽核',
+              processEdges: [
+                {
+                  'dgraph.type': 'ProcessEdge',
+                  uid: '_:firstToSecond',
+                  process_edge_name: 'whatever',
+                  check: 'whatever',
+                  next: {
+                    'dgraph.type': 'Process',
+                    uid: '_:departmentHeadSign',
+                    process_name: '部門主管簽核',
+                    processEdges: [
+                      {
+                        'dgraph.type': 'ProcessEdge',
+                        process_edge_name: 'over_than_5_days',
+                        check: "${leaveDays} > 5 && ${leaveType} == '婚假'",
+                        next: {
+                          'dgraph.type': 'Process',
+                          uid: '_:generalManagerSign',
+                          process_name: '總經理簽核',
+                        },
+                      },
+                    ],
+                  },
+                },
+              ],
+            },
+          },
+        ],
+      },
+    ];
 
     // Run mutation.
     const assigned = await txn.mutate({ setJson: p });
@@ -69,15 +176,14 @@ async function createData(dgraphClient) {
     // Assigned#getUidsMap() returns a map from blank node names to uids.
     // For a json mutation, blank node names "blank-0", "blank-1", ... are used
     // for all the created nodes.
-    console.log(
-      `Created person named "Alice" with uid = ${assigned.data.uids["blank-0"]}\n`
-    );
+    // console.log(
+    //   `Created person named "Alice" with uid = ${assigned.data.uids['blank-0']}\n`
+    // );
 
-    console.log("All created nodes (map from blank node names to uids):");
+    console.log('\nAll created nodes (map from blank node names to uids):');
     Object.keys(assigned.data.uids).forEach((key) =>
       console.log(`${key} => ${assigned.data.uids[key]}`)
     );
-    console.log();
   } finally {
     // Clean up. Calling this after txn.commit() is a no-op
     // and hence safe.
@@ -88,49 +194,59 @@ async function createData(dgraphClient) {
 // Query for data.
 async function queryData(dgraphClient) {
   // Run query.
-  const query = `query all($a: string) {
-        all(func: eq(name, $a)) {
-            uid
-            name
-            age
-            married
-            loc
-            dob
-            friend {
-                name
-                age
+  const query = `query leaveProcesses($leaveProcessType: string) {
+    leaveProcesses(func: eq(process_name, $leaveProcessType) )  {
+      process_name
+      processEdges {
+        process_edge_name
+        check
+        next {
+          process_name
+          processEdges {
+            process_edge_name
+            check
+            next {
+              process_name
+              processEdges {
+                process_edge_name
+                check
+                next {
+                  process_name
+                }
+              }
             }
-            school {
-                name
-            }
+          }
         }
-    }`;
-  const vars = { $a: "Alice" };
+      }
+    }
+  }`;
+  const vars = { $leaveProcessType: '病假' };
   const res = await dgraphClient.newTxn().queryWithVars(query, vars);
   const ppl = res.data;
 
-  // Print results.
-  console.log(`Number of people named "Alice": ${ppl.all.length}`);
-  ppl.all.forEach((person) => console.log(person));
   return ppl;
 }
 
 async function main() {
-  const dgraphClientStub = newClientStub();
-  const dgraphClient = newClient(dgraphClientStub);
+  const dgraphClient = await getDgraphClient();
   await dropAll(dgraphClient);
   await setSchema(dgraphClient);
   await createData(dgraphClient);
+}
 
-  return await queryData(dgraphClient);
+function getDgraphClient() {
+  const dgraphClientStub = newClientStub();
+  const dgraphClient = newClient(dgraphClientStub);
+
+  return dgraphClient;
 }
 
 main()
   .then(() => {
-    console.log("\nDONE!");
+    console.log('\nDONE!');
   })
   .catch((e) => {
-    console.log("ERROR: ", e);
+    console.log('ERROR: ', e);
   });
 
-export { main };
+export { getDgraphClient, queryData };

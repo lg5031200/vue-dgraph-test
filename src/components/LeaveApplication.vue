@@ -8,10 +8,10 @@
 </template>
 
 <script>
-import { main } from '../utils/dgraph-client';
+import { getDgraphClient, queryData } from '../utils/dgraph-client';
 
 export default {
-  name: 'HelloWorld',
+  name: 'LeaveApplication',
   data() {
     return {
       dgraphData: null,
@@ -19,7 +19,8 @@ export default {
   },
   methods: {
     async getData() {
-      this.dgraphData = await main();
+      const dgraphClient = getDgraphClient();
+      this.dgraphData = await queryData(dgraphClient);
     },
   },
 };
