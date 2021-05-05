@@ -1,0 +1,14 @@
+{
+  // 自動格式化貼上的代碼
+  // "editor.formatOnPaste": true,
+  // 保存時自動格式化
+  "editor.formatOnSave": true,
+  // 字體連字 例如: >=
+  "editor.fontLigatures": true,
+  // 保存文件後，將修剪文件末尾的所有多餘換行符
+  "files.trimFinalNewlines": true,
+  // 當檔案移動時，自動更新匯入的路徑
+  "typescript.updateImportsOnFileMove.enabled": "always",
+  // 將使用單引號而不是雙引號
+  "prettier.singleQuote": true
+}
