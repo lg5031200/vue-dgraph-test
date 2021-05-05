@@ -224,23 +224,32 @@ async function queryData(dgraphClient) {
   const res = await dgraphClient.newTxn().queryWithVars(query, vars)
   const ppl = res.data
 
-  await traversalProcess(ppl.leaveProcess[0])
+  const result = await traversalProcess(ppl.leaveProcess[0])
 
-  return ppl
+  return result
 }
 
 async function traversalProcess(process) {
   const application = { applicant: 'Jason', leaveDays: 31, leaveType: '事假' }
 
+  const result = []
+
   console.log(process)
+
+  result.push(process)
+
   if (process.processEdges) {
     process.processEdges.forEach(async (edge) => {
+      // 驗證邊與申請單的資訊
       const isValid = await isValidEdge(edge.check, application)
+      console.log(edge, isValid)
       if (isValid) {
         await traversalProcess(edge.next)
       }
     })
   }
+
+  return result
 }
 
 async function isValidEdge(check, application) {
@@ -261,8 +270,8 @@ async function isValidEdge(check, application) {
       )
     }
 
-    console.log(check)
-    console.log(eval(check))
+    // console.log(check)
+    // console.log(eval(check))
 
     return eval(check)
   }
