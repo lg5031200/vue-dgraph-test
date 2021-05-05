@@ -230,13 +230,12 @@ async function queryData(dgraphClient) {
 }
 
 async function traversalProcess(process) {
-  const application = { applicant: 'Jason', leaveDays: 5, leaveType: '事假' }
+  const application = { applicant: 'Jason', leaveDays: 31, leaveType: '事假' }
 
   console.log(process)
   if (process.processEdges) {
     process.processEdges.forEach(async (edge) => {
       const isValid = await isValidEdge(edge.check, application)
-      console.log(isValid)
       if (isValid) {
         await traversalProcess(edge.next)
       }
