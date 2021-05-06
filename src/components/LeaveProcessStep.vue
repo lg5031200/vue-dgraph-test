@@ -1,5 +1,6 @@
 <template>
   <v-stepper v-model="current">
+    <!-- {{ leaveProcesses }} -->
     <v-stepper-header>
       <template v-for="(process, index) in leaveProcesses">
         <v-stepper-step
@@ -8,7 +9,7 @@
           :step="index + 1"
           editable
         >
-          {{ process.title }}{{ index === 0 ? '' : '簽名' }}
+          {{ process.node_name }}
         </v-stepper-step>
 
         <v-divider
@@ -21,28 +22,10 @@
 </template>
 <script>
 export default {
+  props: ['leaveProcesses'],
   data() {
     return {
       current: 0,
-      leaveProcesses: [
-        {
-          title: '病假',
-          check: true,
-        },
-        {
-          title: '代理人',
-          check: true,
-        },
-        {
-          title: '單位主管',
-          check: true,
-        },
-
-        {
-          title: '總經理',
-          check: true,
-        },
-      ],
     };
   },
 };

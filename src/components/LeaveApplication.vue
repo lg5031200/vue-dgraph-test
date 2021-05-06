@@ -30,7 +30,9 @@
       </v-btn>
     </v-form>
     <div v-if="leaveProcessResults" class="mt-4 pa-4">
-      <leave-process-step></leave-process-step>
+      <leave-process-step
+        :leaveProcesses="leaveProcessResults"
+      ></leave-process-step>
     </div>
   </v-container>
 </template>
@@ -56,7 +58,7 @@ export default {
       return (
         this.username &&
         this.selectLeaveType &&
-        this.selectLeaveDayRange.length !== 0
+        this.selectLeaveDayRange.length == 2
       );
     },
   },

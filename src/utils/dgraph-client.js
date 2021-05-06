@@ -1,18 +1,18 @@
-const dgraph = require('dgraph-js-http')
+const dgraph = require('dgraph-js-http');
 
 // Create a client stub.
 function newClientStub() {
-  return new dgraph.DgraphClientStub('http://localhost:8080')
+  return new dgraph.DgraphClientStub('http://localhost:8080');
 }
 
 // Create a client.
 function newClient(clientStub) {
-  return new dgraph.DgraphClient(clientStub)
+  return new dgraph.DgraphClient(clientStub);
 }
 
 // Drop All - discard all data and start from a clean slate.
 async function dropAll(dgraphClient) {
-  await dgraphClient.alter({ dropAll: true })
+  await dgraphClient.alter({ dropAll: true });
 }
 
 // Set schema.
@@ -23,15 +23,15 @@ async function setSchema(dgraphClient) {
     check: string .
     next: uid .
     process_edge_name: string .
-  `
-  await dgraphClient.alter({ schema: schema })
-  console.log('Set schema success!')
+  `;
+  await dgraphClient.alter({ schema: schema });
+  console.log('Set schema success!');
 }
 
 // Create data using JSON.
 async function createData(dgraphClient) {
   // Create a new transaction.
-  const txn = dgraphClient.newTxn()
+  const txn = dgraphClient.newTxn();
   try {
     // Create data.
     const p = [
@@ -164,13 +164,13 @@ async function createData(dgraphClient) {
           },
         ],
       },
-    ]
+    ];
 
     // Run mutation.
-    const assigned = await txn.mutate({ setJson: p })
+    await txn.mutate({ setJson: p });
 
     // Commit transaction.
-    await txn.commit()
+    await txn.commit();
 
     // Get uid of the outermost object (person named "Alice").
     // Assigned#getUidsMap() returns a map from blank node names to uids.
@@ -180,19 +180,21 @@ async function createData(dgraphClient) {
     //   `Created person named "Alice" with uid = ${assigned.data.uids['blank-0']}\n`
     // );
 
-    console.log('\nAll created nodes (map from blank node names to uids):')
-    Object.keys(assigned.data.uids).forEach((key) =>
-      console.log(`${key} => ${assigned.data.uids[key]}`)
-    )
+    console.log('All created nodes (map from blank node names to uids):');
+    // Object.keys(assigned.data.uids).forEach((key) =>
+    //   console.log(`${key} => ${assigned.data.uids[key]}`)
+    // );
   } finally {
     // Clean up. Calling this after txn.commit() is a no-op
     // and hence safe.
-    await txn.discard()
+    await txn.discard();
   }
 }
 
 // Query for data.
-async function queryData(dgraphClient) {
+async function queryData(dgraphClient, application) {
+  result = [];
+  const { leaveType } = application;
   // Run query.
   const query = `query leaveProcess($leaveProcessType: string) {
     leaveProcess(func: eq(process_name, $leaveProcessType) )  {
@@ -219,84 +221,88 @@ async function queryData(dgraphClient) {
         }
       }
     }
-  }`
-  const vars = { $leaveProcessType: '病假' }
-  const res = await dgraphClient.newTxn().queryWithVars(query, vars)
-  const ppl = res.data
+  }`;
+  const vars = { $leaveProcessType: leaveType };
+  const res = await dgraphClient.newTxn().queryWithVars(query, vars);
+  const ppl = res.data;
 
-  const result = await traversalProcess(ppl.leaveProcess[0])
-
-  return result
+  return await traversalProcess(ppl.leaveProcess[0], application);
 }
+var result = [];
 
-async function traversalProcess(process) {
-  const application = { applicant: 'Jason', leaveDays: 31, leaveType: '事假' }
-
-  const result = []
-
-  console.log(process)
-
-  result.push(process)
-
-  if (process.processEdges) {
-    process.processEdges.forEach(async (edge) => {
-      // 驗證邊與申請單的資訊
-      const isValid = await isValidEdge(edge.check, application)
-      console.log(edge, isValid)
-      if (isValid) {
-        await traversalProcess(edge.next)
+async function traversalProcess(process, application) {
+  const { processEdges } = process;
+  const processEdgesLength = processEdges ? processEdges.length : -1;
+  console.log(`開始遞迴 & push 當前 ${process.process_name} 節點--------`);
+  result.push({
+    node_name: process.process_name,
+  });
+  if (processEdgesLength > 0) {
+    console.log(`下一個節點有條件需審核--------`);
+    for (const [index, edge] of Object.entries(processEdges)) {
+      if (isValidEdge(edge.check, application)) {
+        console.log(`條件通過 & push ${edge.process_edge_name} 節點--------`);
+        result.push({
+          node_name: edge.process_edge_name,
+        });
+        console.log(`仍有下一個節點--------`);
+        if (edge.next) {
+          console.log('執行子遞迴--------');
+          await traversalProcess(edge.next, application);
+        } else {
+          break;
+        }
+      } else if (index == processEdgesLength - 1) {
+        console.log("條件全部失敗, 回傳結果--------')");
+      } else {
+        console.log(`${edge.process_edge_name} 條件失敗, 看下一個條件--------`);
+        continue;
       }
-    })
+    }
   }
-
-  return result
+  // 遍歷結束, 回傳結果
+  return result;
 }
 
-async function isValidEdge(check, application) {
-  const { applicant, leaveDays, leaveType } = application
+function isValidEdge(check, application) {
+  const { username, leaveDays, leaveType } = application;
   if (check === 'whatever') {
-    return true
-  }
-  if (check !== 'whatever') {
-    var replaceArray = ['applicant', 'leaveDays', 'leaveType']
-    var replaceWith = [applicant, leaveDays, leaveType]
-
+    return true;
+  } else {
+    const replaceArray = ['username', 'leaveDays', 'leaveType'];
+    const replaceWith = [username, leaveDays, leaveType];
     for (var i = 0; i <= replaceArray.length - 1; i++) {
       check = check.replace(
         new RegExp('{' + replaceArray[i] + '}', 'gi'),
         typeof replaceWith[i] == 'string'
           ? `'${replaceWith[i]}'`
           : replaceWith[i]
-      )
+      );
     }
-
-    // console.log(check)
-    // console.log(eval(check))
-
-    return eval(check)
+    return eval(check);
   }
 }
 
 async function main() {
-  const dgraphClient = await getDgraphClient()
-  await dropAll(dgraphClient)
-  await setSchema(dgraphClient)
-  await createData(dgraphClient)
+  const dgraphClient = await getDgraphClient();
+  await dropAll(dgraphClient);
+  await setSchema(dgraphClient);
+  await createData(dgraphClient);
 }
 
 function getDgraphClient() {
-  const dgraphClientStub = newClientStub()
-  const dgraphClient = newClient(dgraphClientStub)
+  const dgraphClientStub = newClientStub();
+  const dgraphClient = newClient(dgraphClientStub);
 
-  return dgraphClient
+  return dgraphClient;
 }
 
 main()
   .then(() => {
-    console.log('\nDONE!')
+    console.log('DONE!');
   })
   .catch((e) => {
-    console.log('ERROR: ', e)
-  })
+    console.log('ERROR: ', e);
+  });
 
-export { getDgraphClient, queryData }
+export { getDgraphClient, queryData };
