@@ -37,9 +37,9 @@
   </v-container>
 </template>
 <script>
-import DatePickerDialog from './DatePickerDialog';
-import LeaveProcessStep from './LeaveProcessStep';
-import { getDgraphClient, queryData } from '../utils/dgraph-client';
+import DatePickerDialog from './DatePickerDialog'
+import LeaveProcessStep from './LeaveProcessStep'
+import { getDgraphClient, queryData } from '../utils/dgraph-client'
 
 export default {
   components: {
@@ -59,32 +59,32 @@ export default {
         this.username &&
         this.selectLeaveType &&
         this.selectLeaveDayRange.length == 2
-      );
+      )
     },
   },
   methods: {
     getDates(dates) {
-      this.selectLeaveDayRange = dates;
+      this.selectLeaveDayRange = dates
     },
     formatLeaveDates() {
-      const start = this.selectLeaveDayRange[0].substring(8, 10);
-      const final = this.selectLeaveDayRange[1].substring(8, 10);
-      const userLeaveDays = Number(final) - Number(start) + 1;
-      return userLeaveDays;
+      const start = this.selectLeaveDayRange[0].substring(8, 10)
+      const final = this.selectLeaveDayRange[1].substring(8, 10)
+      const userLeaveDays = Number(final) - Number(start) + 1
+      return userLeaveDays
     },
     getLeaveApplicationData() {
       return {
         username: this.username,
         leaveType: this.selectLeaveType,
         leaveDays: this.formatLeaveDates(),
-      };
+      }
     },
     async sendLeaveProcessForm() {
-      const dgraphClient = getDgraphClient();
-      const input = this.getLeaveApplicationData();
+      const dgraphClient = getDgraphClient()
+      const input = this.getLeaveApplicationData()
 
-      this.leaveProcessResults = await queryData(dgraphClient, input);
+      this.leaveProcessResults = await queryData(dgraphClient, input)
     },
   },
-};
+}
 </script>

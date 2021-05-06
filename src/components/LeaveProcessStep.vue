@@ -1,5 +1,5 @@
 <template>
-  <v-stepper v-model="current">
+  <v-stepper v-model="current" alt-labels style="font-size: 12px">
     <!-- {{ leaveProcesses }} -->
     <v-stepper-header>
       <template v-for="(process, index) in leaveProcesses">
@@ -26,7 +26,7 @@ export default {
   data() {
     return {
       current: 0,
-    };
+    }
   },
-};
+}
 </script>

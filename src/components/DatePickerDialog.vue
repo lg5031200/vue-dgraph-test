@@ -22,18 +22,23 @@ export default {
     return {
       dialog: false,
       dates: [],
-    };
+    }
   },
   computed: {
     dateRangeText() {
-      return this.dates.length > 0 ? this.dates.join(' ~ ') : this.dates;
+      return this.dates.length > 0
+        ? this.dates
+            .slice(0)
+            .sort()
+            .join(' ~ ')
+        : this.dates.slice(0).sort()
     },
   },
   methods: {
     closeDialog() {
-      this.dialog = false;
-      this.$emit('dates-data', this.dates);
+      this.dialog = false
+      this.$emit('dates-data', this.dates.slice(0).sort())
     },
   },
-};
+}
 </script>
