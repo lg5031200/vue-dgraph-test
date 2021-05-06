@@ -240,7 +240,7 @@ async function traversalProcess(process, application) {
   if (processEdgesLength > 0) {
     console.log(`下一個節點有條件需審核--------`);
     for (const [index, edge] of Object.entries(processEdges)) {
-      if (isValidEdge(edge.check, application)) {
+      if (await isValidEdge(edge.check, application)) {
         console.log(`條件通過 & push ${edge.process_edge_name} 節點--------`);
         result.push({
           node_name: edge.process_edge_name,
@@ -254,11 +254,14 @@ async function traversalProcess(process, application) {
         }
       } else if (index == processEdgesLength - 1) {
         console.log("條件全部失敗, 回傳結果--------')");
+        break;
       } else {
         console.log(`${edge.process_edge_name} 條件失敗, 看下一個條件--------`);
         continue;
       }
     }
+  } else {
+    console.log("沒有下一個條件節點了, 回傳結果--------')");
   }
   // 遍歷結束, 回傳結果
   return result;
