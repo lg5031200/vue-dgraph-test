@@ -19,10 +19,10 @@ async function dropAll(dgraphClient) {
 async function setSchema(dgraphClient) {
   const schema = `
     process_name: string @index(hash) .
-    processEdges: [uid] .
+    rules: [uid] .
     check: string .
     next: uid .
-    process_edge_name: string .
+    rule_name: string .
   `
   await dgraphClient.alter({ schema: schema })
   console.log('Set schema success!')
@@ -39,30 +39,30 @@ async function createData(dgraphClient) {
         'dgraph.type': 'Process',
         uid: '_:sickLeave',
         process_name: '病假',
-        processEdges: [
+        rules: [
           {
-            'dgraph.type': 'ProcessEdge',
+            'dgraph.type': 'Rule',
             uid: '_:rootToFirst',
-            process_edge_name: '(無論如何)',
+            rule_name: '(無論如何)',
             check: 'whatever',
             next: {
               'dgraph.type': 'Process',
               uid: '_:agentSign',
               process_name: '職務代理人簽核',
-              processEdges: [
+              rules: [
                 {
-                  'dgraph.type': 'ProcessEdge',
+                  'dgraph.type': 'Rule',
                   uid: '_:firstToSecond',
-                  process_edge_name: '(無論如何)',
+                  rule_name: '(無論如何)',
                   check: 'whatever',
                   next: {
                     'dgraph.type': 'Process',
                     uid: '_:departmentHeadSign',
                     process_name: '部門主管簽核',
-                    processEdges: [
+                    rules: [
                       {
-                        'dgraph.type': 'ProcessEdge',
-                        process_edge_name: '(病假且大於3天)',
+                        'dgraph.type': 'Rule',
+                        rule_name: '(病假且大於3天)',
                         check: "{leaveDays} > 3 && {leaveType} == '病假'",
                         next: {
                           'dgraph.type': 'Process',
@@ -82,30 +82,30 @@ async function createData(dgraphClient) {
         'dgraph.type': 'Process',
         uid: '_:personalLeave',
         process_name: '事假',
-        processEdges: [
+        rules: [
           {
-            'dgraph.type': 'ProcessEdge',
+            'dgraph.type': 'Rule',
             uid: '_:rootToFirst',
-            process_edge_name: '(無論如何)',
+            rule_name: '(無論如何)',
             check: 'whatever',
             next: {
               'dgraph.type': 'Process',
               uid: '_:agentSign',
               process_name: '職務代理人簽核',
-              processEdges: [
+              rules: [
                 {
-                  'dgraph.type': 'ProcessEdge',
+                  'dgraph.type': 'Rule',
                   uid: '_:firstToSecond',
-                  process_edge_name: '(無論如何)',
+                  rule_name: '(無論如何)',
                   check: 'whatever',
                   next: {
                     'dgraph.type': 'Process',
                     uid: '_:departmentHeadSign',
                     process_name: '部門主管簽核',
-                    processEdges: [
+                    rules: [
                       {
-                        'dgraph.type': 'ProcessEdge',
-                        process_edge_name: '(事假且大於3天)',
+                        'dgraph.type': 'Rule',
+                        rule_name: '(事假且大於3天)',
                         check: "{leaveDays} > 3 && {leaveType} == '事假'",
                         next: {
                           'dgraph.type': 'Process',
@@ -125,39 +125,39 @@ async function createData(dgraphClient) {
         'dgraph.type': 'Process',
         uid: '_:weddingLeave',
         process_name: '婚假',
-        processEdges: [
+        rules: [
           {
-            'dgraph.type': 'ProcessEdge',
+            'dgraph.type': 'Rule',
             uid: '_:rootToFirst',
-            process_edge_name: '(無論如何)',
+            rule_name: '(無論如何)',
             check: 'whatever',
             next: {
               'dgraph.type': 'Process',
               uid: '_:agentSign',
               process_name: '職務代理人簽核',
-              processEdges: [
+              rules: [
                 {
-                  'dgraph.type': 'ProcessEdge',
+                  'dgraph.type': 'Rule',
                   uid: '_:firstToSecond',
-                  process_edge_name: '(無論如何)',
+                  rule_name: '(無論如何)',
                   check: 'whatever',
                   next: {
                     'dgraph.type': 'Process',
                     uid: '_:departmentHeadSign',
                     process_name: '部門主管簽核',
-                    processEdges: [
+                    rules: [
                       {
-                        'dgraph.type': 'ProcessEdge',
-                        process_edge_name: '(婚假且大於5天)',
+                        'dgraph.type': 'Rule',
+                        rule_name: '(婚假且大於5天)',
                         check: "{leaveDays} > 5 && {leaveType} == '婚假'",
                         next: {
                           'dgraph.type': 'Process',
                           uid: '_:presonalManagerSign',
                           process_name: '人事主管簽核',
-                          processEdges: [
+                          rules: [
                             {
-                              'dgraph.type': 'ProcessEdge',
-                              process_edge_name: '(無論如何)',
+                              'dgraph.type': 'Rule',
+                              rule_name: '(無論如何)',
                               check: 'whatever',
                               next: {
                                 'dgraph.type': 'Process',
@@ -211,23 +211,23 @@ async function queryData(dgraphClient, application) {
   const query = `query leaveProcess($leaveProcessType: string) {
     leaveProcess(func: eq(process_name, $leaveProcessType) )  {
       process_name
-      processEdges {
-        process_edge_name
+      rules {
+        rule_name
         check
         next {
           process_name
-          processEdges {
-            process_edge_name
+          rules {
+            rule_name
             check
             next {
               process_name
-              processEdges {
-                process_edge_name
+              rules {
+                rule_name
                 check
                 next {
                   process_name
-                  processEdges {
-                    process_edge_name
+                  rules {
+                    rule_name
                     check
                     next {
                       process_name
@@ -250,19 +250,19 @@ async function queryData(dgraphClient, application) {
 var result = []
 
 async function traversalProcess(process, application) {
-  const { processEdges } = process
-  const processEdgesLength = processEdges ? processEdges.length : -1
+  const { rules } = process
+  const rulesLength = rules ? rules.length : -1
   console.log(`開始遞迴 & push 當前 ${process.process_name} 節點--------`)
   result.push({
     node_name: process.process_name,
   })
-  if (processEdgesLength > 0) {
+  if (rulesLength > 0) {
     console.log(`下一個節點有條件需審核--------`)
-    for (const [index, edge] of Object.entries(processEdges)) {
+    for (const [index, edge] of Object.entries(rules)) {
       if (await isValidEdge(edge.check, application)) {
-        console.log(`條件通過 & push ${edge.process_edge_name} 節點--------`)
+        console.log(`條件通過 & push ${edge.rule_name} 節點--------`)
         result.push({
-          node_name: edge.process_edge_name,
+          node_name: edge.rule_name,
         })
         console.log(`仍有下一個節點--------`)
         if (edge.next) {
@@ -271,11 +271,11 @@ async function traversalProcess(process, application) {
         } else {
           break
         }
-      } else if (index == processEdgesLength - 1) {
+      } else if (index == rulesLength - 1) {
         console.log("條件全部失敗, 回傳結果--------')")
         break
       } else {
-        console.log(`${edge.process_edge_name} 條件失敗, 看下一個條件--------`)
+        console.log(`${edge.rule_name} 條件失敗, 看下一個條件--------`)
         continue
       }
     }
