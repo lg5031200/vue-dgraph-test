@@ -57,8 +57,7 @@ export default {
     isFormValid() {
       return (
         this.username &&
-        this.selectLeaveType &&
-        this.selectLeaveDayRange.length == 2
+        this.selectLeaveType 
       )
     },
   },
@@ -67,10 +66,13 @@ export default {
       this.selectLeaveDayRange = dates
     },
     formatLeaveDates() {
-      const start = this.selectLeaveDayRange[0].substring(8, 10)
-      const final = this.selectLeaveDayRange[1].substring(8, 10)
-      const userLeaveDays = Number(final) - Number(start) + 1
-      return userLeaveDays
+      const start = Date.parse(this.selectLeaveDayRange[0]);
+      const final = Date.parse(this.selectLeaveDayRange[1]);
+      if (start==final){
+          return 1;
+      }
+      var days=(final - start)/(1*24*60*60*1000) + 1;
+      return days;
     },
     getLeaveApplicationData() {
       return {

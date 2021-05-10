@@ -252,35 +252,35 @@ var result = []
 async function traversalProcess(process, application) {
   const { rules } = process
   const rulesLength = rules ? rules.length : -1
-  console.log(`開始遞迴 & push 當前 ${process.process_name} 節點--------`)
+  //console.log(`開始遞迴 & push 當前 ${process.process_name} 節點--------`)
   result.push({
     node_name: process.process_name,
   })
   if (rulesLength > 0) {
-    console.log(`下一個節點有條件需審核--------`)
+    //console.log(`下一個節點有條件需審核--------`)
     for (const [index, edge] of Object.entries(rules)) {
       if (await isValidEdge(edge.check, application)) {
         console.log(`條件通過 & push ${edge.rule_name} 節點--------`)
         result.push({
           node_name: edge.rule_name,
         })
-        console.log(`仍有下一個節點--------`)
+       // console.log(`仍有下一個節點--------`)
         if (edge.next) {
-          console.log('執行子遞迴--------')
+          //console.log('執行子遞迴--------')
           await traversalProcess(edge.next, application)
         } else {
           break
         }
       } else if (index == rulesLength - 1) {
-        console.log("條件全部失敗, 回傳結果--------')")
+        //console.log("條件全部失敗, 回傳結果--------')")
         break
       } else {
-        console.log(`${edge.rule_name} 條件失敗, 看下一個條件--------`)
+        //console.log(`${edge.rule_name} 條件失敗, 看下一個條件--------`)
         continue
       }
     }
   } else {
-    console.log("沒有下一個條件節點了, 回傳結果--------')")
+    //console.log("沒有下一個條件節點了, 回傳結果--------')")
   }
   // 遍歷結束, 回傳結果
   return result
