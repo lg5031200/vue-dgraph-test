@@ -68,6 +68,19 @@ async function createData(dgraphClient) {
                           'dgraph.type': 'Process',
                           uid: '_:generalManagerSign',
                           process_name: '總經理簽核',
+                          rules: [
+                            {
+                              'dgraph.type': 'Rule',
+                              uid: '_:overThanThirty',
+                              rule_name: '(大於30天)',
+                              check: '{leaveDays} > 30',
+                              next: {
+                                'dgraph.type': 'Process',
+                                uid: '_:yearBound',
+                                process_name: '取消年終獎金',
+                              },
+                            },
+                          ],
                         },
                       },
                     ],
@@ -111,6 +124,19 @@ async function createData(dgraphClient) {
                           'dgraph.type': 'Process',
                           uid: '_:generalManagerSign',
                           process_name: '總經理簽核',
+                          rules: [
+                            {
+                              'dgraph.type': 'Rule',
+                              uid: '_:overThanThirty',
+                              rule_name: '(大於30天)',
+                              check: '{leaveDays} > 30',
+                              next: {
+                                'dgraph.type': 'Process',
+                                uid: '_:yearBound',
+                                process_name: '取消年終獎金',
+                              },
+                            },
+                          ],
                         },
                       },
                     ],
@@ -163,6 +189,19 @@ async function createData(dgraphClient) {
                                 'dgraph.type': 'Process',
                                 uid: '_:generalManagerSign',
                                 process_name: '總經理簽核',
+                                rules: [
+                                  {
+                                    'dgraph.type': 'Rule',
+                                    uid: '_:overThanThirty',
+                                    rule_name: '(大於30天)',
+                                    check: '{leaveDays} > 30',
+                                    next: {
+                                      'dgraph.type': 'Process',
+                                      uid: '_:yearBound',
+                                      process_name: '取消年終獎金',
+                                    },
+                                  },
+                                ],
                               },
                             },
                           ],
@@ -231,6 +270,13 @@ async function queryData(dgraphClient, application) {
                     check
                     next {
                       process_name
+                      rules {
+                        rule_name
+                        check
+                        next {
+                          process_name
+                        }
+                      }
                     }
                   }
                 }
@@ -264,7 +310,7 @@ async function traversalProcess(process, application) {
         result.push({
           node_name: edge.rule_name,
         })
-       // console.log(`仍有下一個節點--------`)
+        // console.log(`仍有下一個節點--------`)
         if (edge.next) {
           //console.log('執行子遞迴--------')
           await traversalProcess(edge.next, application)
